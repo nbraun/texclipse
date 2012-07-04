@@ -29,7 +29,7 @@ import org.eclipse.core.runtime.Path;
 
 /**
  * A parser interface for finding and parsing files in a LaTeX-project.
- * 
+ *
  * @author Oskar Ojala
  * @author Boris von Loesch
  */
@@ -38,10 +38,11 @@ public class TexProjectParser {
     private IProject currentProject;
 
     private IFile file;
-    
+
     private TexParser parser;
-        
+
     private static final String TEX_FILE_ENDING = ".tex";
+
 
     /**
      * Implementation of a IResourceVisitor for finding files in the project
@@ -115,9 +116,10 @@ public class TexProjectParser {
 			return file;
 		}
     }
+
     /**
      * Creates a new project parser
-     * 
+     *
      * @param currentProject The project this parser should belong to
      * @param labels The label container for this project
      * @param bibs The BibTeX container for this project
@@ -130,7 +132,7 @@ public class TexProjectParser {
      * Finds the given file from the project and returns it or null
      * if such a file wasn't found. If the file was found in a path outside
      * the project, a link to the file is created.
-     * 
+     *
      * @param fileName The name of the file to look for
      * @param referringFile The file referring to this file (used for paths)
      * @return The found file or null if it wasn't found
@@ -138,12 +140,12 @@ public class TexProjectParser {
     public IFile findIFile(String fileName, IFile referringFile) {
         return findIFile(fileName, referringFile, currentProject);
     }
-    
+
     /**
      * Finds the given file from the project and returns it or null
      * if such a file wasn't found. If the file was found in a path outside
      * the project, a link to the file is created.
-     * 
+     *
      * @param fileName The name of the file to look for
      * @param referringFile The file referring to this file (used for paths)
      * @param currentProject
@@ -202,10 +204,10 @@ public class TexProjectParser {
         }
         return file.exists() ? file : null;
     }
-    
+
     /**
      * Parses the given file
-     * 
+     *
      * @param file The file to parse
      * @return Outline tree
      * @throws IOException if the file was not readable
@@ -215,13 +217,13 @@ public class TexProjectParser {
         this.file = file;
         return this.parseFile();
     }
-    
+
     /**
-     * Parses a file that has been previously found with 
+     * Parses a file that has been previously found with
      * <code>findIFile</code>. Note that if the find was not done or
      * it completed unsuccessfully, then the behaviour of this method
      * is undefined.
-     * 
+     *
      * @return Outline tree or null if parsing was unsuccessful.
      * @throws IOException if the file was not readable
      * @throws TexDocumentParseException if the parsing ended in fatal errors
@@ -234,12 +236,12 @@ public class TexProjectParser {
         }
         return parser.getOutlineTree();
     }
-    
+
     /**
      * Parses the document. Parses the complete project with its inputs recursively.
      * At the first round the complete project is parsed. Then only the changed
      * parts will be parsed again and the outlineTree will be generated.
-     * 
+     *
      * @param labels the label container.
      * @param bibs the bib container.
      */
@@ -252,7 +254,7 @@ public class TexProjectParser {
 
     /**
      * Reads a file from the project.
-     * 
+     *
      * @param file the file to be read.
      * @return The contents of the file as a String.
      * @throws IOException
@@ -262,7 +264,7 @@ public class TexProjectParser {
         try {
             BufferedReader buf = new BufferedReader(
                     new InputStreamReader(file.getContents()));
-            
+
             final int length = 10000;
             int read = length;
             char[] fileData = new char[length];
@@ -281,5 +283,5 @@ public class TexProjectParser {
         //return this.rmTrailingWhitespace(inputContent);
         return inputContent.toString();
     }
-    
+
 }
