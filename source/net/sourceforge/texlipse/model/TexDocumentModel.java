@@ -776,7 +776,15 @@ public class TexDocumentModel implements IDocumentListener {
         	        IContainer sourceDir = TexlipseProperties.getProjectSourceDir(project);
         	        res = sourceDir.findMember(name);
         	    }
-                
+
+        	    /**
+        	     * If it is a relative file, maybe the user linked the folder
+        	     * as external resources under the same name. In this
+        	     * case, look for the file without any leading relative
+        	     * path indication to pick it up here.
+        	     */
+        	    res = project.findMember(path + name.replaceAll("\\.\\./", ""));
+
         	    if (res != null) {
                     filepath = res.getLocation().toOSString();
                 }
