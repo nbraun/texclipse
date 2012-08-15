@@ -60,7 +60,20 @@ public class LatexRunner extends AbstractProgramRunner {
     }
     
     public String getDefaultArguments() {
-        return "-interaction=nonstopmode --src-specials %input";
+        /**
+         * --c-style-errors: latex should issue warnings and errors starting
+         *                   with filename and followed by line number. This
+         *                   makes it possible for the parser to correctly
+         *                   determine the source file and the location
+         * --synctex:        Generate SyncTeX data for previewers
+         * --interaction:    non-stop mode since the console does not allow
+         *                   input to the running program such as pdftex
+         * --src-specials:   Embed source file information (source specials) in 
+         *                   the DVI file
+         * 
+         * As seen for pdftex with MikTex 2.9 all options need --
+         */
+    	return "--synctex=1 --c-style-errors --interaction=nonstopmode --src-specials %input";
     }
     
     public String getInputFormat() {
