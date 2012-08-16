@@ -37,7 +37,7 @@ public class LatexRunner extends AbstractProgramRunner {
     
     private static final int MAX_LINE_LENGTH = 79;
 	
-	private Stack<String> parsingStack;
+	protected Stack<String> parsingStack;
     private boolean alreadyShowError;
     
     /**
@@ -430,7 +430,7 @@ public class LatexRunner extends AbstractProgramRunner {
      * 
      * @return The filename or null if no file could be determined
      */
-    private String determineSourceFile() {
+    protected String determineSourceFile() {
         int i = parsingStack.size()-1;
         while (i >= 0) {
             String fileName = parsingStack.get(i).substring(1);
@@ -438,7 +438,10 @@ public class LatexRunner extends AbstractProgramRunner {
             if (fileName.startsWith("\"") && fileName.endsWith("\"")) {
                 fileName = fileName.substring(1, fileName.length() - 1);
             }
-            if (isValidName(fileName)) return fileName;
+            if (isValidName(fileName))
+            {
+            	return fileName;
+            }
             i--;
         }
         return null;
