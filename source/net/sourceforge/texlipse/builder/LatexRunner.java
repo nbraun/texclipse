@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.sourceforge.texlipse.TexlipsePlugin;
+import net.sourceforge.texlipse.filefinder.ProjectFileFinder;
 import net.sourceforge.texlipse.properties.TexlipseProperties;
 
 import org.eclipse.core.resources.IContainer;
@@ -128,6 +129,15 @@ public class LatexRunner extends AbstractProgramRunner {
         	extResource = sourceDir.findMember(p);
             if (extResource == null) {
                 extResource = resource.getParent().findMember(p);
+                
+                /**
+                 * Try to find the file according to its absolute path.
+                 * ProjectFileFinder will also check linked resources
+                 */
+                if (extResource == null)
+                {
+                	extResource = ProjectFileFinder.findFile(project, causingSourceFile);
+                }
             }
         }
         if (extResource == null)
