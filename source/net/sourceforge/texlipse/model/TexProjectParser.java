@@ -10,6 +10,7 @@
 package net.sourceforge.texlipse.model;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -17,12 +18,13 @@ import java.util.List;
 import net.sourceforge.texlipse.TexlipsePlugin;
 import net.sourceforge.texlipse.builder.KpsewhichRunner;
 import net.sourceforge.texlipse.editor.TexDocumentParseException;
+import net.sourceforge.texlipse.filefinder.ProjectFileFinder;
+import net.sourceforge.texlipse.properties.TexlipseProperties;
 import net.sourceforge.texlipse.texparser.TexParser;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -42,80 +44,6 @@ public class TexProjectParser {
     private TexParser parser;
 
     private static final String TEX_FILE_ENDING = ".tex";
-
-
-    /**
-     * Implementation of a IResourceVisitor for finding files in the project
-     * @author nbraun
-     */
-    private static class FileFinder implements IResourceVisitor
-    {
-    	/** The path that is referenced here */
-    	String pathToFind;
-    	/** The file that will be returned */
-    	IFile file;
-
-    	/**
-    	 * Construct a new project file finder
-    	 *
-    	 * @param pathToFind the path and name of the file to find. The path
-    	 *                   separators must be the '/' character since the
-    	 *                   resource path's are denoted as such.
-    	 *                   Secondly it must contain the file name of the
-    	 *                   file to find. All files in the project including
-    	 *                   also files to linked resources will then be tested
-    	 *                   whether the file resource name ends with this
-    	 *                   file path.
-    	 *
-    	 * @param currentFile The current file or null if omitted. If no file
-    	 *                    is returned, the value passed here will be
-    	 *                    returned in getFile()
-    	 */
-    	public FileFinder(String pathToFind, IFile currentFile) {
-			this.pathToFind = pathToFind;
-			this.file = currentFile;
-		}
-
-    	/**
-    	 * This visitor checks each file whether it ends with the string
-    	 * passed in the constructor with the argument pathToFind.
-    	 *
-    	 * @return false, when a match was found. true otherwise to keep
-    	 *         searching
-    	 *
-    	 * @see IResourceVisitor.visit
-    	 */
-		public boolean visit(IResource resource) throws CoreException {
-			/** Resource must be a file */
-			if (resource instanceof IFile)
-			{
-				IFile projFile = (IFile)resource;
-
-				if (projFile.getFullPath().toString().endsWith(pathToFind))
-				{
-					file = projFile;
-					System.out.println("Assume that " + pathToFind + "matches project file " + file.getFullPath());
-
-					/** File is found, no need to look further */
-					return false;
-				}
-			}
-
-			/** No match found, therefore keep visiting */
-			return true;
-		}
-
-		/**
-		 * Get the file that matches the pattern.
-		 *
-		 * @return Returns the file that was found or the file that was set when the
-		 *         object was created
-		 */
-		IFile getFile()
-		{
-			return file;
-		}
-    }
 
     /**
      * Creates a new project parser
@@ -165,26 +93,32 @@ public class TexProjectParser {
 
         	/**
         	 * Check whether the file exists somewhere else in the project
-        	 * such as in a linked folder. In this case it is important to
-        	 * strip all relative path information at the beginning of the
-        	 * reference.
-        	 *
-        	 * As an example:
-        	 *  - main.tex includes ../../folder1/folder2/b.tex
-        	 *  - folder1/folder2 is in the project as linked folder
-        	 *  - the file to match must then be folder1/folder2/b.tex
+        	 * such as in a linked folder.
+        	 * The project file finder will look-up the absolute path to find
+        	 * the file.
+        	 * 
+        	 * All path's in Latex are relative to the main file.
         	 */
-        	try {
-        		String fileNameInProject = fileName.replaceAll("\\.\\./", "");
-        		FileFinder finder = new FileFinder(fileNameInProject, file);
-        		currentProject.accept(finder);
-
-        		file = finder.getFile();
-
-			} catch (CoreException e2) {
-				e2.printStackTrace();
-			}
-
+        	String strMainFile = TexlipseProperties.getProjectProperty(currentProject, TexlipseProperties.MAINFILE_PROPERTY);
+        	
+        	/** Can't do anything if the main file is not set */
+        	if (strMainFile != null)
+        	{
+        		/** Use a File object which is easier then to work with */
+        		File mainFile = currentProject.getFile(strMainFile).getRawLocation().toFile();
+        		
+        		/** 
+        		 * Create the new file path which will proably be relative to 
+        		 * the main file
+        		 */
+        		File fileToFind = new File(mainFile.getParent() + File.separator  + fileName);
+        		
+        		/** Any path must be absolute */
+        		fileToFind = new Path(fileToFind.getAbsolutePath()).makeAbsolute().toFile();
+        		
+        		/** Find the file by the means of the project file finder */
+        		file = ProjectFileFinder.findFile(currentProject, fileToFind.getAbsolutePath());	
+        	}
 
         	if (!file.exists())
         	{
